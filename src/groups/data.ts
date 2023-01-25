@@ -135,7 +135,7 @@ export = function (Groups: Groups) {
     };
 
     Groups.getGroupData = async function (groupName) {
-        const groupsData = await Groups.getGroupsData([groupName]);
+        const groupsData: Group[] = await Groups.getGroupsData([groupName]);
         return Array.isArray(groupsData) && groupsData[0] ? groupsData[0] : null;
     };
 
@@ -145,7 +145,7 @@ export = function (Groups: Groups) {
     };
 
     Groups.getGroupFields = async function (groupName, fields) {
-        const groups = await Groups.getGroupsFields([groupName], fields);
+        const groups: (Group[] | null) = await Groups.getGroupsFields([groupName], fields);
         return groups ? groups[0] : null;
     };
 
@@ -153,7 +153,7 @@ export = function (Groups: Groups) {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         await db.setObjectField(`group:${groupName}`, field, value);
-        plugins.hooks.fire('action:group.set', { field: field, value: value, type: 'set' });
+        await plugins.hooks.fire('action:group.set', { field: field, value: value, type: 'set' });
     };
 };
 

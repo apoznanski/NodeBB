@@ -115,7 +115,7 @@ module.exports = function (Groups) {
             // The next line calls a function in a module that has not been updated to TS yet
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             yield database_1.default.setObjectField(`group:${groupName}`, field, value);
-            plugins_1.default.hooks.fire('action:group.set', { field: field, value: value, type: 'set' });
+            yield plugins_1.default.hooks.fire('action:group.set', { field: field, value: value, type: 'set' });
         });
     };
 };
