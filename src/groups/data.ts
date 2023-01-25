@@ -15,11 +15,11 @@ const intFields = [
 ];
 
 interface Groups {
-    getGroupsFields: (groupNames: string[], fields: string | string[]) => Promise<Groups[]>;
-    getGroupsData: (groupName: string[]) => Promise<Groups[]>;
-    getGroupData: (groupName: string) => Promise<Groups>;
+    getGroupsFields: (groupNames: string[], fields: string | string[]) => Promise<Group[]>;
+    getGroupsData: (groupName: string[]) => Promise<Group[]>;
+    getGroupData: (groupName: string) => Promise<Group>;
     getGroupField: (groupName: string, field: string) => Promise<groupField>;
-    getGroupFields: (groupName: string, fields: string | string[]) => Promise<Groups>;
+    getGroupFields: (groupName: string, fields: string | string[]) => Promise<Group>;
     setGroupField: (groupName: string, field: string, value: string) => Promise<void>;
     ephemeralGroups: string[];
     getEphemeralGroup: (groupName: string) => Promise<Groups>;
@@ -52,6 +52,9 @@ interface Group {
     memberPostCidsArray: number[];
   }
 
+interface GroupCollection {
+    groups: Group[];
+}
 type groupField = string;
 
 function escapeGroupData(group: Group) {
@@ -114,7 +117,7 @@ export = function (Groups: Groups) {
         const keys = groupNames.map(groupName => `group:${groupName}`);
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        const groupData: Group = await db.getObjects(keys, fields);
+        const groupData: Group = await db.getObjects(keys, fields) as Group;
         if (ephemeralIdx.length) {
             ephemeralIdx.forEach((idx) => {
                 groupData[idx] = Groups.getEphemeralGroup(groupNames[idx]);
@@ -123,7 +126,7 @@ export = function (Groups: Groups) {
 
         modifyGroup(groupData, fields);
 
-        const results = await plugins.hooks.fire('filter:groups.get', { groups: groupData });
+        const results: GroupCollection = await plugins.hooks.fire('filter:groups.get', { groups: groupData }) as GroupCollection;
         return results.groups;
     };
 
@@ -137,7 +140,7 @@ export = function (Groups: Groups) {
     };
 
     Groups.getGroupField = async function (groupName, field) {
-        const groupData = await Groups.getGroupFields(groupName, [field]);
+        const groupData: Group = await Groups.getGroupFields(groupName, [field]);
         return groupData ? groupData[field] : null;
     };
 
@@ -147,6 +150,8 @@ export = function (Groups: Groups) {
     };
 
     Groups.setGroupField = async function (groupName, field, value) {
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         await db.setObjectField(`group:${groupName}`, field, value);
         plugins.hooks.fire('action:group.set', { field: field, value: value, type: 'set' });
     };
