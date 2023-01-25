@@ -470,7 +470,7 @@ describe('Groups', () => {
             } catch (err) {
                 return assert.strictEqual(err.message, '[[error:invalid-group-name]]');
             }
-            assert(false);
+            assert(false); 
         });
 
         it('should fail to rename if group name is too short', async () => {
