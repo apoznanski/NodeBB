@@ -8,6 +8,7 @@ import plugins from '../plugins';
 import utils from '../utils';
 import translator from '../translator';
 import coverPhoto from '../coverPhoto';
+import { GroupDataObject } from '../types';
 
 const intFields = [
     'createtime', 'memberCount', 'hidden', 'system', 'private',
@@ -15,48 +16,50 @@ const intFields = [
 ];
 
 interface Groups {
-    getGroupsFields: (groupNames: string[], fields: string[]) => Promise<Group[]>;
-    getGroupsData: (groupName: string[]) => Promise<Group[]>;
-    getGroupData: (groupName: string) => Promise<Group>;
-    getGroupField: (groupName: string, field: string) => Promise<string>;
-    getGroupFields: (groupName: string, fields: string[]) => Promise<Group>;
+    getGroupsFields: (groupNames: string[], fields: string[]) => Promise<GroupDataObject[]>;
+    getGroupsData: (groupName: string[]) => Promise<GroupDataObject[]>;
+    getGroupData: (groupName: string) => Promise<GroupDataObject>;
+    getGroupField: (groupName: string, field: string) => Promise<GroupDataObject>;
+    getGroupFields: (groupName: string, fields: string[]) => Promise<GroupDataObject>;
     setGroupField: (groupName: string, field: string, value: string) => Promise<void>;
     ephemeralGroups: string[];
-    getEphemeralGroup: (groupName: string) => Promise<Group>;
+    getEphemeralGroup: (groupName: string) => string;
 }
 
-interface Group {
-    name: string;
-    slug: string;
-    createtime: number;
-    userTitle: string;
-    userTitleEscaped: number;
-    userTitleEnabled: number;
-    description: string;
-    memberCount: number;
-    hidden: number;
-    system: number;
-    private: number;
-    disableJoinRequests: number;
-    disableLeave: number;
-    'cover:url': string;
-    'cover:thumb:url': string;
-    'cover:position': string;
-    nameEncoded: string;
-    displayName: string;
-    labelColor: string;
-    textColor: string;
-    icon: string;
-    createtimeISO: string;
-    memberPostCids: string;
-    memberPostCidsArray: number[];
-  }
 
-interface GroupCollection {
-    groups: Group[];
-}
 
-function escapeGroupData(group: Group) {
+// interface Group {
+//     name: string;
+//     slug: string;
+//     createtime: number;
+//     userTitle: string;
+//     userTitleEscaped: number;
+//     userTitleEnabled: number;
+//     description: string;
+//     memberCount: number;
+//     hidden: number;
+//     system: number;
+//     private: number;
+//     disableJoinRequests: number;
+//     disableLeave: number;
+//     'cover:url': string;
+//     'cover:thumb:url': string;
+//     'cover:position': string;
+//     nameEncoded: string;
+//     displayName: string;
+//     labelColor: string;
+//     textColor: string;
+//     icon: string;
+//     createtimeISO: string;
+//     memberPostCids: string;
+//     memberPostCidsArray: number[];
+//   }
+
+// interface GroupCollection {
+//     groups: GroupDataObject[];
+// }
+
+function escapeGroupData(group: GroupDataObject) {
     if (group) {
         group.nameEncoded = encodeURIComponent(group.name);
         group.displayName = validator.escape(String(group.name));
@@ -66,7 +69,7 @@ function escapeGroupData(group: Group) {
     }
 }
 
-function modifyGroup(group: Group, fields: string | string[]) {
+function modifyGroup(group: GroupDataObject, fields: string | string[]) {
     if (group) {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -101,7 +104,7 @@ function modifyGroup(group: Group, fields: string | string[]) {
 }
 
 export = function (Groups: Groups) {
-    Groups.getGroupsFields = async function (groupNames, fields): Promise<Group[]> {
+    Groups.getGroupsFields = async function (groupNames, fields) {
         if (!Array.isArray(groupNames) || !groupNames.length) {
             return [];
         }
@@ -116,7 +119,7 @@ export = function (Groups: Groups) {
         const keys = groupNames.map(groupName => `group:${groupName}`);
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        const groupData: Group = await db.getObjects(keys, fields) as Group;
+        const groupData: GroupDataObject = await db.getObjects(keys, fields) as GroupDataObject;
         if (ephemeralIdx.length) {
             ephemeralIdx.forEach((idx) => {
                 groupData[idx] = Groups.getEphemeralGroup(groupNames[idx]);
@@ -125,26 +128,30 @@ export = function (Groups: Groups) {
 
         modifyGroup(groupData, fields);
 
-        const results: GroupCollection = await plugins.hooks.fire('filter:groups.get', { groups: groupData }) as GroupCollection;
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
+        const results = await plugins.hooks.fire('filter:groups.get', { groups: groupData });
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
         return results.groups;
     };
 
-    Groups.getGroupsData = async function (groupNames): Promise<Group[]> {
+    Groups.getGroupsData = async function (groupNames) {
         return await Groups.getGroupsFields(groupNames, []);
     };
 
-    Groups.getGroupData = async function (groupName): Promise<Group> {
-        const groupsData: Group[] = await Groups.getGroupsData([groupName]);
+    Groups.getGroupData = async function (groupName) {
+        const groupsData: GroupDataObject[] = await Groups.getGroupsData([groupName]);
         return Array.isArray(groupsData) && groupsData[0] ? groupsData[0] : null;
     };
 
-    Groups.getGroupField = async function (groupName, field): Promise<string> {
-        const groupData: Group = await Groups.getGroupFields(groupName, [field]);
-        return groupData ? groupData[field] as string : null as string;
+    Groups.getGroupField = async function (groupName, field) {
+        const groupData: GroupDataObject = await Groups.getGroupFields(groupName, [field]);
+        return groupData ? groupData[field] as GroupDataObject : null as GroupDataObject;
     };
 
-    Groups.getGroupFields = async function (groupName, fields): Promise<Group> {
-        const groups: (Group[] | null) = await Groups.getGroupsFields([groupName], fields);
+    Groups.getGroupFields = async function (groupName, fields) {
+        const groups = await Groups.getGroupsFields([groupName], fields);
         return groups ? groups[0] : null;
     };
 

@@ -4,7 +4,7 @@ export type GroupDataObject = {
   name: string;
   slug: string;
   createtime: number;
-  userTitle: number;
+  userTitle: string | number;
   userTitleEscaped: number;
   userTitleEnabled: number;
   description: string;
