@@ -15,11 +15,11 @@ const intFields = [
 ];
 
 interface Groups {
-    getGroupsFields: (groupNames: string[], fields: string | string[]) => Promise<Group[]>;
+    getGroupsFields: (groupNames: string[], fields: string[]) => Promise<Group[]>;
     getGroupsData: (groupName: string[]) => Promise<Group[]>;
     getGroupData: (groupName: string) => Promise<Group>;
-    getGroupField: (groupName: string, field: string) => Promise<groupField>;
-    getGroupFields: (groupName: string, fields: string | string[]) => Promise<Group>;
+    getGroupField: (groupName: string, field: string) => Promise<string>;
+    getGroupFields: (groupName: string, fields: string[]) => Promise<Group>;
     setGroupField: (groupName: string, field: string, value: string) => Promise<void>;
     ephemeralGroups: string[];
     getEphemeralGroup: (groupName: string) => Promise<Groups>;
@@ -55,7 +55,6 @@ interface Group {
 interface GroupCollection {
     groups: Group[];
 }
-type groupField = string;
 
 function escapeGroupData(group: Group) {
     if (group) {
@@ -102,7 +101,7 @@ function modifyGroup(group: Group, fields: string | string[]) {
 }
 
 export = function (Groups: Groups) {
-    Groups.getGroupsFields = async function (groupNames, fields) {
+    Groups.getGroupsFields = async function (groupNames, fields): Promise<Group[]> {
         if (!Array.isArray(groupNames) || !groupNames.length) {
             return [];
         }
@@ -130,21 +129,21 @@ export = function (Groups: Groups) {
         return results.groups;
     };
 
-    Groups.getGroupsData = async function (groupNames) {
+    Groups.getGroupsData = async function (groupNames): Promise<Group[]> {
         return await Groups.getGroupsFields(groupNames, []);
     };
 
-    Groups.getGroupData = async function (groupName) {
+    Groups.getGroupData = async function (groupName): Promise<Group> {
         const groupsData: Group[] = await Groups.getGroupsData([groupName]);
         return Array.isArray(groupsData) && groupsData[0] ? groupsData[0] : null;
     };
 
-    Groups.getGroupField = async function (groupName, field) {
+    Groups.getGroupField = async function (groupName, field): Promise<string> {
         const groupData: Group = await Groups.getGroupFields(groupName, [field]);
-        return groupData ? groupData[field] : null;
+        return groupData ? groupData[field] as string : null as string;
     };
 
-    Groups.getGroupFields = async function (groupName, fields) {
+    Groups.getGroupFields = async function (groupName, fields): Promise<Group> {
         const groups: (Group[] | null) = await Groups.getGroupsFields([groupName], fields);
         return groups ? groups[0] : null;
     };
