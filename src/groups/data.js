@@ -17,6 +17,7 @@ const database_1 = __importDefault(require("../database"));
 const plugins_1 = __importDefault(require("../plugins"));
 const utils_1 = __importDefault(require("../utils"));
 const translator_1 = __importDefault(require("../translator"));
+const coverPhoto_1 = __importDefault(require("../coverPhoto"));
 const intFields = [
     'createtime', 'memberCount', 'hidden', 'system', 'private',
     'userTitleEnabled', 'disableJoinRequests', 'disableLeave',
@@ -49,13 +50,13 @@ function modifyGroup(group, fields) {
             group['cover:url'] = group['cover:url'].startsWith('http') ? group['cover:url'] : (nconf_1.default.get('relative_path') + group['cover:url']);
         }
         else {
-            group['cover:url'] = require('../coverPhoto').getDefaultGroupCover(group.name);
+            group['cover:url'] = coverPhoto_1.default.getDefaultGroupCover(group.name);
         }
         if (group['cover:thumb:url']) {
             group['cover:thumb:url'] = group['cover:thumb:url'].startsWith('http') ? group['cover:thumb:url'] : (nconf_1.default.get('relative_path') + group['cover:thumb:url']);
         }
         else {
-            group['cover:thumb:url'] = require('../coverPhoto').getDefaultGroupCover(group.name);
+            group['cover:thumb:url'] = coverPhoto_1.default.getDefaultGroupCover(group.name);
         }
         group['cover:position'] = validator_1.default.escape(String(group['cover:position'] || '50% 50%'));
     }
@@ -73,6 +74,8 @@ module.exports = function (Groups) {
                 return memo;
             }, []);
             const keys = groupNames.map(groupName => `group:${groupName}`);
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             const groupData = yield database_1.default.getObjects(keys, fields);
             if (ephemeralIdx.length) {
                 ephemeralIdx.forEach((idx) => {

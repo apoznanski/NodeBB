@@ -7,6 +7,7 @@ import db from '../database';
 import plugins from '../plugins';
 import utils from '../utils';
 import translator from '../translator';
+import coverPhoto from '../coverPhoto';
 
 const intFields = [
     'createtime', 'memberCount', 'hidden', 'system', 'private',
@@ -74,7 +75,7 @@ function modifyGroup(group: Group, fields: string | string[]) {
         group.labelColor = validator.escape(String(group.labelColor || '#000000'));
         group.textColor = validator.escape(String(group.textColor || '#ffffff'));
         group.icon = validator.escape(String(group.icon || ''));
-        group.createtimeISO = utils.toISOString(group.createtime);
+        group.createtimeISO = utils.toISOString(group.createtime) as string;
         group.private = ([null, undefined].includes(group.private)) ? 1 : group.private;
         group.memberPostCids = group.memberPostCids || '';
         group.memberPostCidsArray = group.memberPostCids.split(',').map(cid => parseInt(cid, 10)).filter(Boolean);
@@ -82,15 +83,15 @@ function modifyGroup(group: Group, fields: string | string[]) {
         group['cover:thumb:url'] = group['cover:thumb:url'] || group['cover:url'];
 
         if (group['cover:url']) {
-            group['cover:url'] = group['cover:url'].startsWith('http') ? group['cover:url'] : (nconf.get('relative_path') + group['cover:url']);
+            group['cover:url'] = group['cover:url'].startsWith('http') ? group['cover:url'] : (nconf.get('relative_path') as string + group['cover:url']);
         } else {
-            group['cover:url'] = require('../coverPhoto').getDefaultGroupCover(group.name);
+            group['cover:url'] = coverPhoto.getDefaultGroupCover(group.name);
         }
 
         if (group['cover:thumb:url']) {
-            group['cover:thumb:url'] = group['cover:thumb:url'].startsWith('http') ? group['cover:thumb:url'] : (nconf.get('relative_path') + group['cover:thumb:url']);
+            group['cover:thumb:url'] = group['cover:thumb:url'].startsWith('http') ? group['cover:thumb:url'] : (nconf.get('relative_path') as string + group['cover:thumb:url']);
         } else {
-            group['cover:thumb:url'] = require('../coverPhoto').getDefaultGroupCover(group.name);
+            group['cover:thumb:url'] = coverPhoto.getDefaultGroupCover(group.name);
         }
 
         group['cover:position'] = validator.escape(String(group['cover:position'] || '50% 50%'));
@@ -111,6 +112,8 @@ export = function (Groups: Groups) {
         }, []);
 
         const keys = groupNames.map(groupName => `group:${groupName}`);
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         const groupData: Group = await db.getObjects(keys, fields);
         if (ephemeralIdx.length) {
             ephemeralIdx.forEach((idx) => {
