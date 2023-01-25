@@ -22,7 +22,7 @@ interface Groups {
     getGroupFields: (groupName: string, fields: string[]) => Promise<Group>;
     setGroupField: (groupName: string, field: string, value: string) => Promise<void>;
     ephemeralGroups: string[];
-    getEphemeralGroup: (groupName: string) => Promise<Groups>;
+    getEphemeralGroup: (groupName: string) => Promise<Group>;
 }
 
 interface Group {
