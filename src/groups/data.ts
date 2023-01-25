@@ -28,7 +28,7 @@ interface Group {
     name: string;
     slug: string;
     createtime: number;
-    userTitle: number;
+    userTitle: string;
     userTitleEscaped: number;
     userTitleEnabled: number;
     description: string;
