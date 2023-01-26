@@ -26,39 +26,6 @@ interface Groups {
     getEphemeralGroup: (groupName: string) => string;
 }
 
-
-
-// interface Group {
-//     name: string;
-//     slug: string;
-//     createtime: number;
-//     userTitle: string;
-//     userTitleEscaped: number;
-//     userTitleEnabled: number;
-//     description: string;
-//     memberCount: number;
-//     hidden: number;
-//     system: number;
-//     private: number;
-//     disableJoinRequests: number;
-//     disableLeave: number;
-//     'cover:url': string;
-//     'cover:thumb:url': string;
-//     'cover:position': string;
-//     nameEncoded: string;
-//     displayName: string;
-//     labelColor: string;
-//     textColor: string;
-//     icon: string;
-//     createtimeISO: string;
-//     memberPostCids: string;
-//     memberPostCidsArray: number[];
-//   }
-
-// interface GroupCollection {
-//     groups: GroupDataObject[];
-// }
-
 function escapeGroupData(group: GroupDataObject) {
     if (group) {
         group.nameEncoded = encodeURIComponent(group.name);
