@@ -97,7 +97,7 @@ export = function (Groups: Groups) {
 
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
-        const results = await plugins.hooks.fire('filter:groups.get', { groups: groupData });
+        const results: { groups: GroupDataObject[] } = await plugins.hooks.fire('filter:groups.get', { groups: groupData });
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
         return results.groups;
