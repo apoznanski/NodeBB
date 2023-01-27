@@ -94,12 +94,13 @@ export = function (Groups: Groups) {
         }
 
         modifyGroup(groupData, fields);
-
-        // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
-        const results: { groups: GroupDataObject[] } = await plugins.hooks.fire('filter:groups.get', { groups: groupData });
-        // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
+        
+        const results: { groups: GroupDataObject[] } = await plugins.hooks.fire('filter:groups.getFields',
+            {
+                groupNames: groupNames,
+                groups: groupData,
+                fields: fields,
+            }) as { groups: GroupDataObject[] };
         return results.groups;
     };
 
