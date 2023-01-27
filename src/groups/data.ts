@@ -23,7 +23,7 @@ interface Groups {
     getGroupFields: (groupName: string, fields: string[]) => Promise<GroupDataObject>;
     setGroupField: (groupName: string, field: string, value: string) => Promise<void>;
     ephemeralGroups: string[];
-    getEphemeralGroup: (groupName: string) => string;
+    getEphemeralGroup: (groupName: string) => GroupDataObject;
 }
 
 function escapeGroupData(group: GroupDataObject) {
@@ -85,21 +85,19 @@ export = function (Groups: Groups) {
 
         const keys = groupNames.map(groupName => `group:${groupName}`);
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        const groupData: GroupDataObject = await db.getObjects(keys, fields) as GroupDataObject;
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,
+        @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
+        const groupData: GroupDataObject[] = await db.getObjects(keys, fields);
         if (ephemeralIdx.length) {
             ephemeralIdx.forEach((idx) => {
                 groupData[idx] = Groups.getEphemeralGroup(groupNames[idx]);
             });
         }
 
-        modifyGroup(groupData, fields);
-
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
         const results: { groups: GroupDataObject[] } = await plugins.hooks.fire('filter:groups.get', { groups: groupData });
-        // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
+        results.groups.forEach((groupData: GroupDataObject) => modifyGroup(groupData, fields));
         return results.groups;
     };
 
