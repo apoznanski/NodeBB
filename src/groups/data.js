@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -62,63 +53,51 @@ function modifyGroup(group, fields) {
     }
 }
 module.exports = function (Groups) {
-    Groups.getGroupsFields = function (groupNames, fields) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!Array.isArray(groupNames) || !groupNames.length) {
-                return [];
+    Groups.getGroupsFields = async function (groupNames, fields) {
+        if (!Array.isArray(groupNames) || !groupNames.length) {
+            return [];
+        }
+        const ephemeralIdx = groupNames.reduce((memo, cur, idx) => {
+            if (Groups.ephemeralGroups.includes(cur)) {
+                memo.push(idx);
             }
-            const ephemeralIdx = groupNames.reduce((memo, cur, idx) => {
-                if (Groups.ephemeralGroups.includes(cur)) {
-                    memo.push(idx);
-                }
-                return memo;
-            }, []);
-            const keys = groupNames.map(groupName => `group:${groupName}`);
-            // The next line calls a function in a module that has not been updated to TS yet
-            /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,
-            @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
-            const groupData = yield database_1.default.getObjects(keys, fields);
-            if (ephemeralIdx.length) {
-                ephemeralIdx.forEach((idx) => {
-                    groupData[idx] = Groups.getEphemeralGroup(groupNames[idx]);
-                });
-            }
-            // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-            const results = yield plugins_1.default.hooks.fire('filter:groups.get', { groups: groupData });
-            results.groups.forEach((groupData) => modifyGroup(groupData, fields));
-            return results.groups;
-        });
+            return memo;
+        }, []);
+        const keys = groupNames.map(groupName => `group:${groupName}`);
+        // The next line calls a function in a module that has not been updated to TS yet
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,
+        @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
+        const groupData = await database_1.default.getObjects(keys, fields);
+        if (ephemeralIdx.length) {
+            ephemeralIdx.forEach((idx) => {
+                groupData[idx] = Groups.getEphemeralGroup(groupNames[idx]);
+            });
+        }
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+        const results = await plugins_1.default.hooks.fire('filter:groups.get', { groups: groupData });
+        results.groups.forEach((groupData) => modifyGroup(groupData, fields));
+        return results.groups;
     };
-    Groups.getGroupsData = function (groupNames) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield Groups.getGroupsFields(groupNames, []);
-        });
+    Groups.getGroupsData = async function (groupNames) {
+        return await Groups.getGroupsFields(groupNames, []);
     };
-    Groups.getGroupData = function (groupName) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const groupsData = yield Groups.getGroupsData([groupName]);
-            return Array.isArray(groupsData) && groupsData[0] ? groupsData[0] : null;
-        });
+    Groups.getGroupData = async function (groupName) {
+        const groupsData = await Groups.getGroupsData([groupName]);
+        return Array.isArray(groupsData) && groupsData[0] ? groupsData[0] : null;
     };
-    Groups.getGroupField = function (groupName, field) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const groupData = yield Groups.getGroupFields(groupName, [field]);
-            return groupData ? groupData[field] : null;
-        });
+    Groups.getGroupField = async function (groupName, field) {
+        const groupData = await Groups.getGroupFields(groupName, [field]);
+        return groupData ? groupData[field] : null;
     };
-    Groups.getGroupFields = function (groupName, fields) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const groups = yield Groups.getGroupsFields([groupName], fields);
-            return groups ? groups[0] : null;
-        });
+    Groups.getGroupFields = async function (groupName, fields) {
+        const groups = await Groups.getGroupsFields([groupName], fields);
+        return groups ? groups[0] : null;
     };
-    Groups.setGroupField = function (groupName, field, value) {
-        return __awaiter(this, void 0, void 0, function* () {
-            // The next line calls a function in a module that has not been updated to TS yet
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-            yield database_1.default.setObjectField(`group:${groupName}`, field, value);
-            yield plugins_1.default.hooks.fire('action:group.set', { field: field, value: value, type: 'set' });
-        });
+    Groups.setGroupField = async function (groupName, field, value) {
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        await database_1.default.setObjectField(`group:${groupName}`, field, value);
+        await plugins_1.default.hooks.fire('action:group.set', { field: field, value: value, type: 'set' });
     };
 };
